@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineBook - Movie Booking System</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="index.html" class="nav-link">
+                    <i class="fas fa-film"></i> CineBook
+                </a>
+            </div>
+            <div class="nav-menu">
+                <a href="index.html" class="nav-link active">Home</a>
+                <a href="movies.html" class="nav-link">Movies</a>
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+            </div>
+            <div class="nav-auth">
+                <button class="btn btn-secondary" onclick="authManager.showLoginModal()">Login</button>
+                <button class="btn btn-primary" onclick="authManager.showRegisterModal()">Sign Up</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="container">
+                <h1 class="hero-title">Welcome to CineBook</h1>
+                <p class="hero-description">Experience cinema like never before. Book your favorite movies with ease and enjoy premium entertainment.</p>
+                <div class="hero-buttons">
+                    <a href="movies.html" class="btn btn-primary btn-large">
+                        <i class="fas fa-film"></i>
+                        Browse Movies
+                    </a>
+                    <a href="dashboard.html" class="btn btn-secondary btn-large">
+                        <i class="fas fa-ticket-alt"></i>
+                        My Bookings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Movies Preview Section -->
+    <section class="movies-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Now Showing</h2>
+                <p class="section-subtitle">Discover the latest and greatest movies in theaters</p>
+            </div>
+            <div class="movies-grid" id="moviesGrid">
+                <!-- Movies will be loaded dynamically -->
+                <div class="movie-card-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading amazing movies...</p>
+                </div>
+            </div>
+            <div class="text-center mt-8">
+                <button class="btn btn-outline btn-large" onclick="viewAllMovies()">
+                    <i class="fas fa-arrow-right"></i>
+                    View All Movies
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Authentication Modals -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Welcome Back</h2>
+                <button class="close-modal" onclick="authManager.closeModals()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="loginEmail">Email Address</label>
+                        <input type="email" id="loginEmail" class="form-input" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full btn-large">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
+                    </button>
+                </form>
+                <p class="switch-auth">
+                    Don't have an account? 
+                    <a href="#" onclick="authManager.switchToRegister()">Create one now</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Join CineBook</h2>
+                <button class="close-modal" onclick="authManager.closeModals()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="registerForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="registerName">Full Name</label>
+                        <input type="text" id="registerName" class="form-input" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail">Email Address</label>
+                        <input type="email" id="registerEmail" class="form-input" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" class="form-input" placeholder="Create a password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full btn-large">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
+                    </button>
+                </form>
+                <p class="switch-auth">
+                    Already have an account? 
+                    <a href="#" onclick="authManager.switchToLogin()">Sign in here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/main.js"></script>
+</body>
+</html>
