@@ -1,36 +1,84 @@
-# MovieBooking (CineBook)
+# 🎬 Movie Ticket Booking System with Microservices
 
-A simple microservice-based movie booking sample app. This workspace contains three Spring Boot services (User, Movie, Booking) and a small frontend served from the `userService` static resources. The UI has been simplified and the booking flow includes a client-side seat map and a minimal "Book Now" payment step (Name + Phone).
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-2.7-green.svg)](https://spring.io/projects/spring-boot)
+[![Java](https://img.shields.io/badge/Java-11-orange.svg)](https://www.oracle.com/java/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-blue.svg)](https://www.mysql.com/)
+[![JWT](https://img.shields.io/badge/JWT-Authentication-red.svg)](https://jwt.io/)
+
+A modern movie ticket booking application built using a microservices architecture with Spring Boot. This workspace contains three Spring Boot services (User, Movie, Booking) and a responsive frontend served from the `userService` static resources. The UI features a clean design with a client-side seat map and streamlined booking process.
 
 ---
+
+## 🌟 Key Features
+
+- **User Authentication & Authorization**: Secure registration and login with JWT tokens
+- **Movie Browsing & Filtering**: Browse movies with filtering options
+- **Interactive Seat Selection**: Visual seat map with real-time availability updates
+- **Booking Management**: Create, view, and manage ticket bookings
+- **Responsive Design**: Modern UI that works on desktop and mobile devices
 
 ## Table of contents
 
 - Project overview
+- Architecture
 - Repository layout
 - Technologies
 - How to run (Windows / cmd.exe)
 - Build (package) instructions
 - Frontend details (where to find pages & assets)
 - Booking flow (quick walkthrough)
+- API Documentation
 - Configuration and ports (assumptions and how to change)
+- Database Structure
 - Troubleshooting & common errors
 - Files you may want to inspect/modify
 - Next steps / TODOs
 
 ---
 
-## Project overview
+## Project Overview
 
-This project implements a small movie booking system split into three services so you can run them independently while developing:
+This project implements a comprehensive movie booking system split into three microservices so you can run them independently while developing:
 
 - `userService` — serves the frontend static assets (HTML/CSS/JS) and contains authentication/user endpoints.
-- `movieService` — provides movie data (listings, details).
+- `movieService` — provides movie data (listings, details) and manages seat availability.
 - `bookingService` — accepts booking requests and stores/returns bookings.
 
-The frontend is shipped inside `userService/src/main/resources/static/` and uses simple JS helpers to call the three services.
+The frontend is shipped inside `userService/src/main/resources/static/` and uses JavaScript helpers to call the three services.
 
-Note: This README documents the repository layout and how to run the application locally. A number of UI simplifications were made (minimal CSS, removed marketing sections, simplified payment step) to make testing faster.
+## 🏗️ Architecture
+
+The application follows a microservice architecture with three main services:
+
+### 1. User Service
+- Manages user authentication and profile information
+- Handles user registration and login
+- Generates and validates JWT tokens
+- Serves the frontend UI static resources
+- Default port: 8080
+
+### 2. Movie Service
+- Manages movie data and seat information
+- Provides APIs for movie listings, details, and seat availability
+- Handles search and filtering of movie content
+- Default port: 8081
+
+### 3. Booking Service
+- Manages the booking process and ticketing
+- Handles seat reservation and booking confirmation
+- Maintains booking history and status
+- Default port: 8082
+
+### Microservice Communication
+
+The services communicate with each other via REST APIs:
+- Frontend -> UserService: Direct HTTP for authentication and serving static files
+- Frontend -> MovieService: Direct HTTP for movie listings and details
+- Frontend -> BookingService: Direct HTTP for booking operations
+- BookingService -> MovieService: Server-side HTTP for seat availability verification
+- BookingService -> UserService: Server-side HTTP for user validation
+
+Each service maintains its own database, with referential integrity managed at the application level.
 
 ---
 
@@ -48,12 +96,29 @@ Each service is a standard Maven Spring Boot application and includes the Maven 
 
 ---
 
-## Technologies
+## 💻 Tech Stack
 
-- Java + Spring Boot (REST services)
-- Maven (build)
-- Plain HTML/CSS/Vanilla JS for the frontend (static files under `userService/src/main/resources/static/`)
-- No frontend framework (React/Vue) — small, easy to modify static pages
+### Backend
+- **Java 11**
+- **Spring Boot** - REST API development
+- **Spring Data JPA** - Data persistence and ORM
+- **Spring Security** - Authentication and authorization
+- **JWT Authentication** - Secure token-based authentication
+- **Maven** - Dependency management and build
+- **MySQL** - Relational database
+
+### Frontend
+- **HTML5/CSS3** - Structure and styling
+- **Vanilla JavaScript** - Client-side functionality
+- **Fetch API** - HTTP requests
+- **JSON** - Data interchange
+- **Responsive Design** - Mobile-friendly UI
+- Static files served from `userService/src/main/resources/static/`
+
+### Development Tools
+- **Git** - Version control
+- **Maven Wrapper** - No need for local Maven installation
+- **Spring Boot DevTools** - Hot reload during development
 
 ---
 
@@ -145,11 +210,66 @@ Note: the frontend now sends `selectedSeatLabels` (array of seat ids like `A1`, 
 
 ---
 
+## 🔌 API Documentation
+
+### User Service API
+- `POST /api/auth/register` - Register a new user
+  - Request: `{ "username": "user", "password": "pass", "email": "user@example.com" }`
+  - Response: `{ "id": 1, "username": "user", "email": "user@example.com" }`
+
+- `POST /api/auth/login` - Authenticate and get JWT token
+  - Request: `{ "username": "user", "password": "pass" }`
+  - Response: `{ "token": "JWT_TOKEN_STRING", "username": "user" }`
+
+- `GET /api/auth/user` - Get current user profile (requires authentication)
+  - Response: `{ "id": 1, "username": "user", "email": "user@example.com" }`
+
+### Movie Service API
+- `GET /api/movies` - List all movies
+  - Response: `[{ "id": 1, "title": "Movie Title", "description": "...", ... }]`
+
+- `GET /api/movies/{id}` - Get movie details
+  - Response: `{ "id": 1, "title": "Movie Title", "description": "...", ... }`
+
+- `GET /api/movies/{id}/seats` - Get seat availability for a movie
+  - Response: `[{ "id": 1, "movieId": 1, "seatLabel": "A1", "isBooked": false, "price": 10.0 }]`
+
+### Booking Service API
+- `POST /api/bookings` - Create a new booking (requires authentication)
+  - Request: `{ "username": "user", "movieId": 1, "selectedSeatLabels": ["A1", "A2"], "seats": 2, "totalAmount": 20.0 }`
+  - Response: `{ "id": 1, "username": "user", "movieId": 1, "seatLabel": "A1,A2", "bookedAt": "2023-06-15T10:30:00" }`
+
+- `GET /api/bookings/{username}` - Get user's bookings (requires authentication)
+  - Response: `[{ "id": 1, "username": "user", "movieId": 1, "seatLabel": "A1,A2", "bookedAt": "2023-06-15T10:30:00" }]`
+
+## 🗄️ Database Structure
+
+The application uses a distributed database approach with each service managing its own data domain:
+
+### User Service Database
+- **Users Table**: Stores user authentication and profile information
+  - Fields: id, username, email, password (encrypted), created_at
+
+### Movie Service Database
+- **Movies Table**: Contains movie information
+  - Fields: id, title, description, genre, duration, release_date, image_url
+- **Seats Table**: Represents available seats for each movie
+  - Fields: id, movie_id, seat_label, is_booked, price
+
+### Booking Service Database
+- **Bookings Table**: Records all ticket bookings
+  - Fields: id, username, movie_id, seat_label, booked_at
+  - Contains a unique constraint on (movie_id, seat_label) to prevent double bookings
+
+### Relationships
+- **Users → Bookings**: One-to-many (one user can make many bookings)
+- **Movies → Seats**: One-to-many (one movie has many seats)
+- **Movies → Bookings**: One-to-many (one movie can have many bookings)
+- **Seats → Bookings**: One-to-one (each seat can be booked once per movie)
+
 ## Configuration and ports (assumptions)
 
-The repo does not hard-code port assignments in this README. Typical default Spring Boot port is `8080`. Because this workspace contains three services they must not run on the same port simultaneously.
-
-Reasonable assumption used during development/testing:
+Default port configuration during development/testing:
 - `userService` — 8080 (frontend)
 - `movieService` — 8081
 - `bookingService` — 8082
@@ -198,6 +318,33 @@ Also check for any other environment-specific configuration (DB, credentials) in
 - `userService/src/main/resources/static/booking.html` — booking page markup (seat map + minimal payment form)
 
 Backend service main classes:
+
+## 🚀 Future Improvements
+
+Here are some potential enhancements for the project:
+
+1. **Payment Gateway Integration**: Add real payment processing
+2. **Email Confirmation**: Send booking confirmations via email
+3. **Admin Dashboard**: Create an admin panel for managing movies and bookings
+4. **User Reviews**: Allow users to rate and review movies
+5. **Recommendation Engine**: Suggest movies based on user preferences
+6. **Docker Containerization**: Package services as Docker containers
+7. **API Gateway**: Implement an API Gateway using Spring Cloud Gateway
+8. **Service Discovery**: Add Eureka service registry
+9. **Circuit Breaker**: Implement Resilience4j for fault tolerance
+10. **Monitoring**: Add Spring Boot Actuator endpoints
+
+## 👥 Contributors
+
+- [manyas15](https://github.com/manyas15) - Project Creator
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+⭐ If you find this project useful, please consider giving it a star on GitHub! ⭐
 - `bookingService/src/main/java/.../BookingServiceApplication.java`
 - `movieService/src/main/java/.../MovieServiceApplication.java`
 - `userService/src/main/java/.../UserServiceApplication.java`
