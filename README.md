@@ -244,24 +244,159 @@ Note: the frontend now sends `selectedSeatLabels` (array of seat ids like `A1`, 
 
 ## 🗄️ Database Structure
 
-The application uses a distributed database approach with each service managing its own data domain:
+The application can use either a single database (`moviebooking`) for all services or separate databases for each service.
 
-### User Service Database
-- **Users Table**: Stores user authentication and profile information
-  - Fields: id, username, email, password (encrypted), created_at
+### Database Setup Scripts
 
-### Movie Service Database
-- **Movies Table**: Contains movie information
-  - Fields: id, title, description, genre, duration, release_date, image_url
-- **Seats Table**: Represents available seats for each movie
-  - Fields: id, movie_id, seat_label, is_booked, price
+#### Option 1: Separate Databases (Microservices Best Practice)
 
-### Booking Service Database
-- **Bookings Table**: Records all ticket bookings
-  - Fields: id, username, movie_id, seat_label, booked_at
-  - Contains a unique constraint on (movie_id, seat_label) to prevent double bookings
+```sql
+-- Create separate databases for each service
+CREATE DATABASE IF NOT EXISTS user_service;
+CREATE DATABASE IF NOT EXISTS movie_service;
+CREATE DATABASE IF NOT EXISTS booking_service;
 
-### Relationships
+-- User Service Database Setup
+USE user_service;
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Movie Service Database Setup
+USE movie_service;
+
+CREATE TABLE IF NOT EXISTS movies (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    description TEXT,
+    genre VARCHAR(50),
+    duration INT,
+    release_date DATE,
+    image_url VARCHAR(255)
+);
+
+CREATE TABLE IF NOT EXISTS seats (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    movie_id INT NOT NULL,
+    seat_label VARCHAR(10) NOT NULL,
+    is_booked BOOLEAN DEFAULT FALSE,
+    price DECIMAL(10,2) NOT NULL,
+    UNIQUE KEY movie_seat_unique (movie_id, seat_label),
+    FOREIGN KEY (movie_id) REFERENCES movies(id)
+);
+
+-- Booking Service Database Setup
+USE booking_service;
+
+CREATE TABLE IF NOT EXISTS bookings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    movie_id INT NOT NULL,
+    seat_label VARCHAR(255) NOT NULL,
+    total_amount DECIMAL(10,2) NOT NULL,
+    booked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_booking (movie_id, seat_label)
+);
+```
+
+#### Option 2: Single Database (Current Implementation)
+
+```sql
+-- Create a single database for all services
+CREATE DATABASE IF NOT EXISTS moviebooking;
+USE moviebooking;
+
+-- Users Table
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Movies Table
+CREATE TABLE IF NOT EXISTS movies (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    description TEXT,
+    genre VARCHAR(50),
+    duration INT,
+    release_date DATE,
+    image_url VARCHAR(255)
+);
+
+-- Seats Table (based on actual entity structure)
+CREATE TABLE IF NOT EXISTS seats (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    movie_id INT NOT NULL,
+    seat_number VARCHAR(10) NOT NULL,
+    row_name VARCHAR(5) NOT NULL,
+    seat_in_row INT NOT NULL,
+    is_available BOOLEAN DEFAULT TRUE,
+    seat_type VARCHAR(20),
+    additional_price DECIMAL(10,2) DEFAULT 0.00
+);
+
+-- Bookings Table
+CREATE TABLE IF NOT EXISTS bookings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    movie_id INT NOT NULL,
+    seat_label VARCHAR(255) NOT NULL,
+    total_amount DECIMAL(10,2) NOT NULL,
+    booked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_booking (movie_id, seat_label)
+);
+
+-- Sample Seat Data Generation
+INSERT INTO seats (movie_id, seat_number, row_name, seat_in_row, is_available, seat_type, additional_price)
+SELECT 
+    m.id, 
+    CONCAT(r.row_letter, s.seat_num),
+    r.row_letter,
+    s.seat_num,
+    TRUE,
+    CASE 
+        WHEN r.row_letter IN ('A', 'B') THEN 'Regular'
+        WHEN r.row_letter IN ('C', 'D') THEN 'Premium'
+        ELSE 'VIP'
+    END,
+    CASE 
+        WHEN r.row_letter IN ('A', 'B') THEN 0.00
+        WHEN r.row_letter IN ('C', 'D') THEN 2.00
+        ELSE 5.00
+    END
+FROM movies m
+CROSS JOIN (
+    SELECT 'A' as row_letter UNION SELECT 'B' UNION SELECT 'C' UNION SELECT 'D'
+) r
+CROSS JOIN (
+    SELECT 1 as seat_num UNION SELECT 2 UNION SELECT 3 UNION 
+    SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8
+) s;
+```
+
+### Data Verification Queries
+
+```sql
+-- Check tables in the database
+USE moviebooking;
+SHOW TABLES;
+
+-- View data in each table
+SELECT * FROM users;
+SELECT * FROM movies;
+SELECT * FROM seats;
+SELECT * FROM bookings;
+```
+
+### Entity Relationships
 - **Users → Bookings**: One-to-many (one user can make many bookings)
 - **Movies → Seats**: One-to-many (one movie has many seats)
 - **Movies → Bookings**: One-to-many (one movie can have many bookings)
